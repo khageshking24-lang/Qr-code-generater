@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexa QR Suite | Khagesh ai-nexa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        :root { --bg: #0f172a; --accent: #10b981; }
+        .light-mode { --bg: #f1f5f9; --accent: #059669; }
+        body { background: var(--bg); color: white; font-family: 'Plus Jakarta Sans', sans-serif; transition: 0.3s; }
+        .light-mode { color: #1e293b; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; }
+        .light-mode .glass { background: white; border-color: rgba(0,0,0,0.05); shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .tab-btn.active { border-bottom: 3px solid var(--accent); color: var(--accent); }
+        #qrcode img { margin: 0 auto; border: 10px solid white; border-radius: 15px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+    </style>
+</head>
+<body class="p-4 max-w-md mx-auto pb-20">
+
+    <div class="flex justify-between items-center mb-8 pt-4">
+        <button onclick="toggleTheme()" class="bg-emerald-500/20 text-emerald-400 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-500/30">Theme</button>
+        <div id="clock" class="text-xs font-bold opacity-50">00:00:00</div>
+        <h2 class="text-[8px] font-black opacity-30 uppercase tracking-[3px]">Khagesh ai-nexa</h2>
+    </div>
+
+    <div class="text-center mb-10">
+        <h1 class="text-5xl font-black italic tracking-tighter text-emerald-500">NEXA <span class="text-inherit opacity-80">QR</span></h1>
+        <p class="text-[9px] font-bold opacity-40 uppercase tracking-[5px] mt-2">Professional Generator</p>
+    </div>
+
+    <div class="glass p-6 mb-8">
+        <div class="flex justify-around mb-6 text-[10px] font-black uppercase tracking-widest">
+            <button onclick="switchTab('link')" id="tab-link" class="tab-btn active pb-2">Link</button>
+            <button onclick="switchTab('wa')" id="tab-wa" class="tab-btn pb-2">WhatsApp</button>
+            <button onclick="switchTab('upi')" id="tab-upi" class="tab-btn pb-2">UPI Pay</button>
+        </div>
+
+        <div id="inputArea" class="space-y-4">
+            <input type="text" id="qrData" placeholder="https://example.com" class="w-full p-4 rounded-xl bg-black/20 border border-white/10 outline-none font-bold text-sm">
+        </div>
+
+        <button onclick="generateNow()" class="w-full mt-6 bg-emerald-600 py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-emerald-900/20 active:scale-95 transition-all">Generate QR Code</button>
+    </div>
+
+    <div id="resultArea" class="hidden animate-bounce-in">
+        <div class="glass p-8 text-center">
+            <div id="qrcode" class="flex justify-center mb-6"></div>
+            <p class="text-[10px] font-black opacity-40 uppercase tracking-widest mb-4">Scan to Proceed</p>
+            <div class="flex gap-2">
+                <button onclick="window.print()" class="flex-1 bg-white text-black py-3 rounded-xl font-black text-[10px] uppercase">Print QR</button>
+                <button onclick="resetQR()" class="flex-1 bg-slate-700 text-white py-3 rounded-xl font-black text-[10px] uppercase">New QR</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="fixed bottom-0 left-0 w-full p-6 bg-inherit backdrop-blur-md text-center border-t border-white/5">
+        <p class="text-[8px] font-bold opacity-40 tracking-[4px] uppercase mb-1">Developed by Nexa AI</p>
+        <p class="text-[10px] font-black italic">Business Mobile: 8882737014</p>
+    </footer>
+
+    <script>
+        let currentTab = 'link';
+
+        function updateClock() { document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-IN', {hour12: false}); }
+        setInterval(updateClock, 1000); updateClock();
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            
+            const area = document.getElementById('inputArea');
+            if(tab === 'link') area.innerHTML = `<input type="text" id="qrData" placeholder="https://example.com" class="w-full p-4 rounded-xl bg-black/20 border border-white/10 outline-none font-bold text-sm">`;
+            if(tab === 'wa') area.innerHTML = `<input type="tel" id="qrPhone" placeholder="Mobile Number" class="w-full p-4 rounded-xl bg-black/20 border border-white/10 outline-none font-bold text-sm mb-3"> <textarea id="qrMsg" placeholder="Hello..." class="w-full p-4 rounded-xl bg-black/20 border border-white/10 outline-none text-sm"></textarea>`;
+            if(tab === 'upi') area.innerHTML = `<input type="text" id="upiId" placeholder="example@upi" class="w-full p-4 rounded-xl bg-black/20 border border-white/10 outline-none font-bold text-sm mb-3"> <input type="number" id="upiAmt" placeholder="Amount (Optional)" class="w-full p-4 rounded-xl bg-black/20 border border-white/10 outline-none text-sm">`;
+        }
+
+        function generateNow() {
+            let finalData = "";
+            if(currentTab === 'link') finalData = document.getElementById('qrData').value;
+            if(currentTab === 'wa') finalData = `https://wa.me/91${document.getElementById('qrPhone').value}?text=${encodeURIComponent(document.getElementById('qrMsg').value)}`;
+            if(currentTab === 'upi') {
+                const id = document.getElementById('upiId').value;
+                const amt = document.getElementById('upiAmt').value;
+                finalData = `upi://pay?pa=${id}&am=${amt}&cu=INR`;
+            }
+
+            if(!finalData) return alert("Pehle details bharo bhai!");
+
+            document.getElementById('qrcode').innerHTML = "";
+            new QRCode(document.getElementById('qrcode'), {
+                text: finalData,
+                width: 200,
+                height: 200,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+
+            document.getElementById('resultArea').classList.remove('hidden');
+            window.scrollTo(0, document.body.scrollHeight);
+        }
+
+        function resetQR() { document.getElementById('resultArea').classList.add('hidden'); switchTab(currentTab); }
+        function toggleTheme() { document.body.classList.toggle('light-mode'); }
+        function toggleTheme() { document.body.classList.toggle('light-mode'); }
+    </script>
+</body>
+  </html>
+  
